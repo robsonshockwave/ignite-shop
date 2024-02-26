@@ -8,6 +8,8 @@ import { stripe } from '@/lib/stripe';
 import Stripe from 'stripe';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
+import axios from 'axios';
+import { useState } from 'react';
 
 interface ProductProps {
   id: string;
@@ -26,10 +28,33 @@ export default function Product({
   description,
   defaultPriceId,
 }: ProductProps) {
+  const [isCreatingCheckoutSession, setIsCreatingCheckoutSession] =
+    useState(false);
+
   const { isFallback } = useRouter();
 
   if (isFallback) {
     return <h1>Carregando...</h1>;
+  }
+
+  async function handleBuyProduct() {
+    try {
+      setIsCreatingCheckoutSession(true);
+
+      const response = await axios.post('/api/checkout', {
+        priceId: defaultPriceId,
+      });
+
+      const { checkoutUrl } = response.data;
+
+      window.location.href = checkoutUrl;
+    } catch (error) {
+      // Conectar com uma ferramente de observabilidade (Datadog/ Sentry/ etc.)
+
+      setIsCreatingCheckoutSession(false);
+
+      alert('Falha ao redirecionar para o checkout!');
+    }
   }
 
   return (
@@ -44,7 +69,9 @@ export default function Product({
 
         <p>{description}</p>
 
-        <button>Comprar agora</button>
+        <button disabled={isCreatingCheckoutSession} onClick={handleBuyProduct}>
+          Comprar agora
+        </button>
       </ProductDetails>
     </ProductContainer>
   );
@@ -55,7 +82,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
   return {
     paths: [{ params: { id: 'prod_PclE2yieTKx1Xd' } }],
-    fallback: true,
+    fallback: true, // 'blocking' | 'true' | 'false'
   };
 };
 
