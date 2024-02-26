@@ -15,6 +15,7 @@ interface ProductProps {
   imageUrl: string;
   price: string;
   description: string;
+  defaultPriceId: string;
 }
 
 export default function Product({
@@ -23,6 +24,7 @@ export default function Product({
   imageUrl,
   price,
   description,
+  defaultPriceId,
 }: ProductProps) {
   const { isFallback } = useRouter();
 
@@ -81,6 +83,7 @@ export const getStaticProps: GetStaticProps<
         currency: 'BRL',
       }).format((price.unit_amount as number) / 100),
       description: product.description || 'Sem descrição',
+      defaultPriceId: price.id,
     },
     revalidate: 60 * 60 * 1, // 1 hour
   };
